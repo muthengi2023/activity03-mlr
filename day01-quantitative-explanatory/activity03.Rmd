@@ -7,10 +7,6 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-In the last activity, you might have noticed that I made this Rmd output a document with a type of `github_document` (in the YAML header underneath the title - on line 3) instead of a HTML, Word, or PDF document.
-This produces a GitHub friendly Markdown file that GitHub then renders to HTML.
-You can read more about this output type in RMarkdown's [documentation page](https://rmarkdown.rstudio.com/github_document_format.html) if you want to learn more.
-
 # Day 1
 
 ## Load the necessary packages
@@ -30,8 +26,10 @@ Remember that [Emil Hvitfeldt](https://www.emilhvitfeldt.com/) (of Posit) has pu
   
 - Run the `load-packages` code chunk or **knit** <img src="../README-img/knit-icon.png" alt="knit" width = "20"/> icon your Rmd document to verify that no errors occur.
 
-```{r load-packages}
-
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(GGally)
+library(tidymodels)
 ```
 
 Since we will be looking at many relationships graphically, it will be nice to not have to code each of these individually.
@@ -62,12 +60,24 @@ Create a new R code chunk below that is titled `load-data` and reads in the abov
 - Assign this data set into a data frame named `hfi` (short for "Human Freedom Index").
 - Filter the data `hfi` data frame for year 2016 and assigns the result to an R data object named `hfi_2016`. You will use `hfi_2016` for the remainder of this activity.
 
+```{r loading the data}
+hfi <- read_csv('hfi.csv')
+```
+
+
 We will continue using personal freedom scores, `pf_score`, as the response variable and build on our model that had `pf_expression_control` as the explanatory variable. 
 
 Create a new R code chunk below, with an appropriate title, that does the following:
 
 - Review the about page of the data set and select at least one additional numeric variables (hint: look for `<dbl>` or `<int>` designations) to describe its distribution. Remember to write your description.
 - You may also wish to do this for `pf_score` and `pf_expression_control` again to help you remember what you noticed last week.
+
+```{r}
+hfi_2016 <- hfi %>% filter(year == 2016)
+
+glimpse(hfi_2016)
+```
+
 
 ## Pairwise relationships
 
@@ -98,10 +108,17 @@ Now, we will obtain graphical and numerical summaries to describe the pairwise r
 - In the code chunk below titled `pairs-plot`, replace "verbatim" with "r" just before the code chunk title.
 - Replace `explanatory` in the `select` line with the variable you identified above
 - Run your code chunk or knit your document.
-  
-```{verbatim pairs-plot}
+```{r pairs-plot}
+
 hfi_2016 %>% 
-  select(pf_score, pf_expression_control, explanatory) %>% 
+  select(pf_score, pf_expression_control, ef_legal) %>% 
+  ggpairs()
+```
+
+  
+```{r, warning=FALSE}
+hfi_2016 %>% 
+  select(pf_score, pf_expression_control, ef_legal) %>% 
   ggpairs()
 ```
 
@@ -114,12 +131,12 @@ Somewhat related... If you do not want all the messages `{tidyverse}` and `{tidy
 After running the `pairs-plot` code, answer the following questions:
 
 1. For each pair of variables, how would you describe the relationship graphically?
-  Do any of the relationships look linear?
+  Do any of the relationships look linear? Yes and there are no outliers.
   Are there any interesting/odd features (outliers, non-linear patterns, etc.)?
 
 2. For each pair of variables, how would you describe the relationship numerically?
 
-3. Are your two explanatory variables collinear (correlated)?
+3. Are your two explanatory variables collinear (correlated)? Yes with a correlation of 0.6
   Essentially, this means that adding more than one of these variables to the model would not add much value to the model.
   We will talk more on this issue in Activity 4 (other considerations in regression models).
 
@@ -136,7 +153,7 @@ $$
 - Replace `explanatory`, similarly to what you did in your `pairs-plot` R code chunk.
 - Run your code chunk or knit your document.
   
-```{verbatim mlr-model}
+```{r}
 #fit the mlr model
 lm_spec <- linear_reg() %>%
   set_mode("regression") %>%
@@ -145,7 +162,7 @@ lm_spec <- linear_reg() %>%
 lm_spec
 
 mlr_mod <- lm_spec %>% 
-fit(pf_score ~ pf_expression_control + explanatory, data = hfi_2016)
+fit(pf_score ~ pf_expression_control + ef_legal, data = hfi_2016)
 
 # model output
 tidy(mlr_mod)
@@ -158,7 +175,9 @@ After doing this, answer the following questions:
 
 $$
 \hat{y} = b_0 + b_1 \times x_1
-$$
+$$\hat{pf\\_score} = 3.361 + 0.428 \times x_1$$ 
+
+
   
   where $b_0$ and $b_1$ were your model parameter estimates.
   Note that your model here will be different (and have more terms).
@@ -173,6 +192,36 @@ Do some internet sleuthing to minimally produce a 3-D scatterplot (you do not ne
 Ideally, this would be something that plays nicely with (looks similar to) `{ggplot2}`.
 
 - Create a new R code chunk, with a descriptive name, and add your code to create this plot.
+
+```{r}
+library(plotly)
+
+two_d <- ggplot(hfi_2016, aes(x = pf_expression_control, y = pf_score, color = pf_rank)) +
+  geom_point(size = 2) +
+  labs(title = "3D Scatter Plot",
+       x = "Weight",
+       y = "Miles per Gallon",
+       color = "Horsepower")
+# Convert ggplot to plotly object for 3D plotting
+ggplotly(two_d) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = 'Weight'),
+      yaxis = list(title = 'Miles per Gallon'),
+      zaxis = list(title = 'Horsepower')
+    )
+  )
+
+# Create a 3D scatter plot
+fig <- plot_ly(hfi_2016, x = ~pf_expression_control, y = ~pf_score, z = ~pf_rank, type = 'scatter3d', mode = 'markers')
+
+fig
+```
+
+
+
+
+
 
 After doing this, respond to the following prompt:
 
@@ -207,7 +256,7 @@ Fortunately, we can create our own.
 - In the code chunk below titled `binary-pred`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
   
-```{verbatim binary-pred}
+```{r}
 hfi_2016 <- hfi_2016 %>%
   mutate(west_atlantic = if_else(
     region %in% c("North America", "Latin America & the Caribbean"),
@@ -222,7 +271,7 @@ hfi_2016 <- hfi_2016 %>%
 - In the code chunk below titled `qual-mlr`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
 
-```{verbatim qual-mlr}
+```{r}
 # review any visual patterns
 hfi_2016 %>% 
   select(pf_score, west_atlantic, pf_expression_control) %>% 
@@ -328,7 +377,7 @@ $$
 - In the code chunk below titled `int-mlr`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
 
-```{verbatim int-mlr}
+```{r}
 # review any visual patterns
 hfi_2016 %>% 
   select(pf_score, west_atlantic, pf_expression_control) %>% 
@@ -376,7 +425,7 @@ One way to check this is to build our null model (no predictors) and then compar
 
 - In the code chunk below titled `mod-comp`, replace "verbatim" with "r" just before the code chunk title.
   
-```{verbatim mod-comp}
+```{r}
 # null model
 null_mod <- lm_spec %>% 
 fit(response ~ 1, data = data)
