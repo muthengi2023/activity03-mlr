@@ -7,10 +7,6 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-In the last activity, you might have noticed that I made this Rmd output a document with a type of `github_document` (in the YAML header underneath the title - on line 3) instead of a HTML, Word, or PDF document.
-This produces a GitHub friendly Markdown file that GitHub then renders to HTML.
-You can read more about this output type in RMarkdown's [documentation page](https://rmarkdown.rstudio.com/github_document_format.html) if you want to learn more.
-
 # Day 1
 
 ## Load the necessary packages
@@ -30,8 +26,10 @@ Remember that [Emil Hvitfeldt](https://www.emilhvitfeldt.com/) (of Posit) has pu
   
 - Run the `load-packages` code chunk or **knit** <img src="../README-img/knit-icon.png" alt="knit" width = "20"/> icon your Rmd document to verify that no errors occur.
 
-```{r load-packages}
-
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(GGally)
+library(tidymodels)
 ```
 
 Since we will be looking at many relationships graphically, it will be nice to not have to code each of these individually.
@@ -62,12 +60,24 @@ Create a new R code chunk below that is titled `load-data` and reads in the abov
 - Assign this data set into a data frame named `hfi` (short for "Human Freedom Index").
 - Filter the data `hfi` data frame for year 2016 and assigns the result to an R data object named `hfi_2016`. You will use `hfi_2016` for the remainder of this activity.
 
+```{r loading the data}
+hfi <- read_csv('hfi.csv')
+```
+
+
 We will continue using personal freedom scores, `pf_score`, as the response variable and build on our model that had `pf_expression_control` as the explanatory variable. 
 
 Create a new R code chunk below, with an appropriate title, that does the following:
 
 - Review the about page of the data set and select at least one additional numeric variables (hint: look for `<dbl>` or `<int>` designations) to describe its distribution. Remember to write your description.
 - You may also wish to do this for `pf_score` and `pf_expression_control` again to help you remember what you noticed last week.
+
+```{r}
+hfi_2016 <- hfi %>% filter(year == 2016)
+
+glimpse(hfi_2016)
+```
+
 
 ## Pairwise relationships
 
@@ -98,10 +108,17 @@ Now, we will obtain graphical and numerical summaries to describe the pairwise r
 - In the code chunk below titled `pairs-plot`, replace "verbatim" with "r" just before the code chunk title.
 - Replace `explanatory` in the `select` line with the variable you identified above
 - Run your code chunk or knit your document.
-  
-```{verbatim pairs-plot}
+```{r pairs-plot}
+
 hfi_2016 %>% 
-  select(pf_score, pf_expression_control, explanatory) %>% 
+  select(pf_score, pf_expression_control, pf_rank) %>% 
+  ggpairs()
+```
+
+  
+```{r, warning=FALSE}
+hfi_2016 %>% 
+  select(pf_score, pf_expression_control, pf_rank) %>% 
   ggpairs()
 ```
 
@@ -114,12 +131,21 @@ Somewhat related... If you do not want all the messages `{tidyverse}` and `{tidy
 After running the `pairs-plot` code, answer the following questions:
 
 1. For each pair of variables, how would you describe the relationship graphically?
-  Do any of the relationships look linear?
-  Are there any interesting/odd features (outliers, non-linear patterns, etc.)?
+
+There's a positive relationship between pf score and pf control. Additionally, there is a negative relationship between pf rank and pf score. As one's score increases, their rank decreases. Furthermore, the expression control has a negative relation with rank. As expression control increases, the rank decreases.
+
+  Do any of the relationships look linear? Yes and there are no outliers.
+  Are there any interesting/odd features (outliers, non-linear patterns, etc.)? There are no outliers.
 
 2. For each pair of variables, how would you describe the relationship numerically?
 
-3. Are your two explanatory variables collinear (correlated)?
+There's a positive relationship between pf score and pf control. Additionally, there is a negative relationship between pf rank and pf score. As one's score increases, their rank decreases. Furthermore, the expression control has a negative relation with rank. As expression control increases, the rank decreases.
+
+
+3. Are your two explanatory variables collinear (correlated)? 
+
+Yes, they are negatively correlated. 
+
   Essentially, this means that adding more than one of these variables to the model would not add much value to the model.
   We will talk more on this issue in Activity 4 (other considerations in regression models).
 
@@ -136,7 +162,7 @@ $$
 - Replace `explanatory`, similarly to what you did in your `pairs-plot` R code chunk.
 - Run your code chunk or knit your document.
   
-```{verbatim mlr-model}
+```{r}
 #fit the mlr model
 lm_spec <- linear_reg() %>%
   set_mode("regression") %>%
@@ -145,26 +171,40 @@ lm_spec <- linear_reg() %>%
 lm_spec
 
 mlr_mod <- lm_spec %>% 
-fit(pf_score ~ pf_expression_control + explanatory, data = hfi_2016)
+fit(pf_score ~ pf_expression_control + ef_legal, data = hfi_2016)
 
 # model output
 tidy(mlr_mod)
 ```
+
 
 After doing this, answer the following questions:
 
 4. Using your output, write the complete estimated equation for this model.
   Remember in Activity 2 that this looked like:
 
-$$
+##$$
 \hat{y} = b_0 + b_1 \times x_1
-$$
+$$\hat{pf\\_score} = 3.361 + 0.428 \times x_1$$ 
+
+
   
   where $b_0$ and $b_1$ were your model parameter estimates.
   Note that your model here will be different (and have more terms).
 
 5. For each of the estimated parameters (the *y*-intercept and the slopes associated with each explanatory variable - three total), interpret these values in the context of this problem.
   That is, what do they mean for a "non-data" person?
+  
+this formula can now be used to predict the personal freedom score based on the value of the political pressures and controls on media content index.
+
+### Intercept 3.361, the intercept represents the estimated personal freedom score when the political pressures and controls on media content index (\texttt{pf_expression_control}) is 0. If there were no political pressures and controls on media content (i.e., \texttt{pf_expression_control} = 0), the personal freedom score would be approximately 0.428. This provides a baseline level of personal freedom in the absence of political pressures on media content.
+### Slope 0.428, the slope represents the estimated change in the personal freedom score for each one-unit increase in the political pressures and controls on media content index (\texttt{pf_expression_control}). Specifically, for every one-unit increase in the \texttt{pf_expression_control} index, the personal freedom score is expected to increase by approximately 0.428 units.
+### This positive relationship suggests that higher political pressures and controls on media content are associated with higher personal freedom scores. This might seem counterintuitive at first, but it could imply that in environments where there are more political pressures and controls on media, there could be compensatory mechanisms or efforts in place to ensure personal freedoms are maintained or improved.
+### The intercept provides a starting point for personal freedom scores in the theoretical scenario where political pressures and controls on media content are completely absent.
+### The slope indicates the direction and strength of the relationship between political pressures on media and personal freedom scores. The positive slope suggests a direct, although not necessarily causal, relationship where increasing political pressures and controls on media content correlate with increasing personal freedom scores.
+
+### Summary > For countries with a `pf_expression_control` of 0 (those with the largest amount of political pressure on media content), we expect their mean personal freedom score to be 0.428. > For every 1 unit increase in `pf_expression_control` (political pressure on media content index), we expect a country's mean personal freedom score to increase 0.428 units.
+
 
 ## Challenge: 3-D plots
 
@@ -173,12 +213,43 @@ Do some internet sleuthing to minimally produce a 3-D scatterplot (you do not ne
 Ideally, this would be something that plays nicely with (looks similar to) `{ggplot2}`.
 
 - Create a new R code chunk, with a descriptive name, and add your code to create this plot.
+```{r}
+library(ggplot2)
+library(plotly)
+
+two_d <- ggplot(hfi_2016, aes(x = pf_expression_control, y = pf_score, color = pf_rank)) +
+  geom_point(size = 2) +
+  labs(title = "3D Scatter Plot",
+       x = "Weight",
+       y = "Miles per Gallon",
+       color = "Horsepower")
+# Convert ggplot to plotly object for 3D plotting
+ggplotly(two_d) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = 'Weight'),
+      yaxis = list(title = 'Miles per Gallon'),
+      zaxis = list(title = 'Horsepower')
+    )
+  )
+
+# Create a 3D scatter plot
+fig <- plot_ly(hfi_2016, x = ~pf_expression_control, y = ~pf_score, z = ~ef_legal, type = 'scatter3d', mode = 'markers')
+
+fig
+```
+
+
+
+
+
 
 After doing this, respond to the following prompt:
 
-6. Compare your 3-D scatterplot and the `GGally::ggpairs` output.
+6. Compare your 3-D scatterplot and the `GGally::ggpairs` output. The 3D gives a clearer visualization.
   Comment on the strengths and weaknesses of these two visualizations.
-  Do both display on GitHub when you push your work there?
+  GGpairs is easier to interpret while 3D though gives a 3dimensional angle of the plot may be difficult to interpret. The advantage is you can rotate the plot.
+  Do both display on GitHub when you push your work there? 3D does not load in Github.
 
 # Day 2
 
@@ -192,9 +263,9 @@ For the Mini-Competition next week, you will be instructed to use the train/test
 This is similar to what we have already been doing - fitting our desired model.
 For today's activity, we will fit something like:
 
-$$
+#$$
 y = \beta_0 + \beta_1 \times \text{qualitative\\_variable} + \beta_2 \times \text{quantitative\\_variable} + \varepsilon
-$$
+#$$
 
 where $y$, $\text{qualitative\\_variable}$, and $\text{quantitative\\_variable}$ are from `hfi_2016`.
 Note that the two explanatory variables can be entered in whatever order.
@@ -206,8 +277,8 @@ Fortunately, we can create our own.
 
 - In the code chunk below titled `binary-pred`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
-  
-```{verbatim binary-pred}
+
+```{r}
 hfi_2016 <- hfi_2016 %>%
   mutate(west_atlantic = if_else(
     region %in% c("North America", "Latin America & the Caribbean"),
@@ -216,13 +287,15 @@ hfi_2016 <- hfi_2016 %>%
   ))
 ```
 
+
 7. What is happening in the above code? What new variable did we create? How do you know it is new? What values does it take when?
 
+Based on the above, the binary indicator was assigned YES if the region is NOT Latin America and the Caribbean. 
 
 - In the code chunk below titled `qual-mlr`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
 
-```{verbatim qual-mlr}
+```{r}
 # review any visual patterns
 hfi_2016 %>% 
   select(pf_score, west_atlantic, pf_expression_control) %>% 
@@ -250,13 +323,13 @@ Regardless, I encourage you to keep your readings of *DF* in mind - who will ben
 Also, when looking at your model (`tidy`) output, the `term` label for your qualitative explanatory variable look odd.
 Answer the following questions:
 
-8. What is the label that R assigned to this explanatory variable `term`?
+8. What is the label that R assigned to this explanatory variable `term`? west_atlantic.
 
 
-9. What information is represented here?
+9. What information is represented here? YES if the region is NOT Latin America and the Caribbean.
 
 
-10. What information is missing here?
+10. What information is missing here? what to do if there is another region, not sure of how to interpret it.
 
 
 Your are essentially fitting two models (or $k$ models, where $k$ is the number of levels in your qualitative variable).
@@ -271,6 +344,7 @@ Use `?relevel` to learn more.
 
 11. Write the estimated equation for your MLR model with a qualitative explanatory variable.
 
+y = 4.377 + -.1 \times \text{west_atlanticYES} + .54 \times \text{pf_expression_control} + \varepsilon
 
 12. Now, for each level of your qualitative variable, write the simplified equation of the estimated line for that level. 
   Note that if your qualitative variable has two levels, you should have two simplified equations.
@@ -291,8 +365,20 @@ Page 83 of the text can help here (or have me come chat with you).
 ## Challenge: Multiple levels
 
 Below, create a new R code chunk (with a descriptive name) that fits a new model with the same response (`pf_score`) and quantitative explanatory variable (`pf_expression_control`), but now use a qualitative variable with more than two levels (say, `region`) and obtain the `tidy` model output.
-How does R appear to handle categorical variables with more than two levels?
 
+How does R appear to handle categorical variables with more than two levels?
+Every region is included into the model.
+```{r}
+hfi_2016_update<- hfi_2016|>
+  mutate(west_atlantic = factor(west_atlantic, levels = c("Yes", "No")))
+
+qual_mod <- lm_spec |> 
+  fit(pf_score ~ region + pf_expression_control, data = hfi_2016_update)
+
+# model output
+tidy(qual_mod)
+
+```
 
 
 # Day 3
@@ -328,7 +414,7 @@ $$
 - In the code chunk below titled `int-mlr`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
 
-```{verbatim int-mlr}
+```{r}
 # review any visual patterns
 hfi_2016 %>% 
   select(pf_score, west_atlantic, pf_expression_control) %>% 
@@ -376,7 +462,7 @@ One way to check this is to build our null model (no predictors) and then compar
 
 - In the code chunk below titled `mod-comp`, replace "verbatim" with "r" just before the code chunk title.
   
-```{verbatim mod-comp}
+```{r}
 # null model
 null_mod <- lm_spec %>% 
 fit(response ~ 1, data = data)
