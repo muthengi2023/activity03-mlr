@@ -248,7 +248,10 @@ After doing this, respond to the following prompt:
 
 6. Compare your 3-D scatterplot and the `GGally::ggpairs` output. The 3D gives a clearer visualization.
   Comment on the strengths and weaknesses of these two visualizations.
-  GGpairs is easier to interpret while 3D though gives a 3dimensional angle of the plot may be difficult to interpret. The advantage is you can rotate the plot.
+
+As for ggpairs, it is hard to identify patterns and relationships that are not immediately apparent in 2D plots, such as how legal enforcement freedom interacts with the other two variables.
+Using 3D scatter plots enhances the ability to visualize and interpret the relationships between multiple variables simultaneously, providing deeper insights into the data. The 3D scatter plot created using plotly in this example reveals complex relationships between freedom of expression control, overall freedom score, and legal enforcement freedom in the hfi_2016 dataset.
+
   Do both display on GitHub when you push your work there? 3D does not load in Github.
 
 # Day 2
@@ -439,18 +442,31 @@ After doing this, answer the following question:
 
 15. When viewing the `tidy` output, notice that the interaction term is listed as `qualitativelevel:quantitative`.
   Referring back to Day 2 with how R displays qualitative variables, interpret what this syntax means.
+  
+he syntax qualitativelevel:quantitative in the context of multiple linear regression typically refers to an interaction term between a qualitative (categorical) variable and a quantitative (continuous) variable. 
+  
+qualitativelevel:quantitative captures how the relationship between the quantitative variable and the dependent variable differs across levels of the qualitative variable.
 
 
 16. Using page 100 of *ISLR* as a reference, if needed, and your work from Day 2, write the simplified equation of the line corresponding to each level of your qualitative explanatory variable.
 
 
+pf_score=5.721+(−1.598)×west_atlanticYes+0.296×pf_expression_control+0.275×(west_atlanticYes×pf_expression_control)
+
+This equation indicates how pf_score is influenced by being in the Western Atlantic region, freedom of expression control, and their interaction. All coefficients are statistically significant, suggesting that these factors meaningfully contribute to predicting pf_score.
+
+
 17. For two observations with similar values of the quantitative , which level tends to have higher values of the response variable?
 
+for two observations with similar values of pf_expression_control, the level (west_atlanticYes) that tends to have higher values of the response variable (pf_score) depends on the specific value of pf_expression_control:
+
+For lower values of pf_expression_control, countries not in the Western Atlantic have higher pf_score.
+For higher values of pf_expression_control, countries in the Western Atlantic have higher pf_score.
 
 18. Like you did in Day 1, assess the fit of this model (no need to do any formal hypothesis testing - we will explore this next).
   How does `int_mod`'s fit compare to `mlr_mod`?
   What did you use to compare these?
-  Why?
+  Why? I dont understand this and could not depict anything of it because i got an error.
 
 
 Recall our brief discussion on how many disciplines are moving away from $p$-values in favor of other methods.
@@ -462,7 +478,7 @@ One way to check this is to build our null model (no predictors) and then compar
 
 - In the code chunk below titled `mod-comp`, replace "verbatim" with "r" just before the code chunk title.
   
-```{r}
+#```{r}
 # null model
 null_mod <- lm_spec %>% 
 fit(response ~ 1, data = data)
@@ -476,7 +492,8 @@ anova(
 19. Using your background knowledge of $F$ tests, what is the $F$ test statistic and $p$-value for this test?
   Based on an $\alpha = 0.05$ significant level, what should you conclude?
 
-
+F test statistic F* = 3.284 
+$p$-value = 1.262236×10−3 (0.001262236)
 
 ## Partial slope test - do all predictors help explain $y$?
 
@@ -492,7 +509,33 @@ Because the interaction term is a combination of the other two variables, we sho
 20. What is the $t$ test statistic and $p$-value associated with this test?
   Based on an $\alpha = 0.05$ significant level, what should you conclude?
 
+Testing the Interaction Term
+For the interaction term {west_atlanticYes:pf_expression_control}:
 
+Estimate: 0.2750385
+Std. Error: 0.08376269
+t-statistic: 3.283544
+p-value: 0.001262236
+
+Hypothesis Testing
+The hypotheses for the test of the interaction term are:
+
+Null hypothesis 𝐻0: The coefficient of the interaction term is zero (𝛽3=0)
+Alternative hypothesis 𝐻𝐴: The coefficient of the interaction term is not zero (𝛽3≠0)
+
+Calculating the t-Statistic and p-Value
+t=3.283544.
+p-value 
+p=0.001262236.
+
+Conclusion at 𝛼=0.05 Significance Level
+To determine if the interaction term is statistically significant at the 
+𝛼=0.05
+
+Since p<0.05, we reject the null hypothesis.
+
+Conclusion
+Based on the 𝑡t-statistic of 3.283544 and a p-value of 0.001262236, we conclude that the interaction term {west_atlanticYes:pf_expression_control} is statistically significant at the α=0.05 significance level. This indicates that the interaction between west_atlanticYes and pf_expression_control significantly contributes to the prediction of pf_score.
 
 If your interaction term was not significant, you could consider removing it.
 Now look at your two non-interaction terms...
@@ -500,9 +543,43 @@ Now look at your two non-interaction terms...
 21. What are the $t$ test statistic and $p$-value associated with these tests?
   Based on an $\alpha = 0.05$ significant level, what should you conclude about these two predictors?
 
+two non-interaction terms:
 
+Testing the Predictors
+For west_atlanticYes:
+Estimate: -1.5979076
+Std. Error: 0.48353450
+t-statistic: -3.304640
+p-value: 0.001176686
+
+For pf_expression_control:
+Estimate: 0.2961044
+Std. Error: 0.07889682
+t-statistic: 3.753059
+p-value: 0.0002449722
+
+Hypothesis Testing
+The hypotheses for testing each predictor are:
+
+Null hypothesis (𝐻0): The coefficient is zero (β=0).
+Alternative hypothesis (HA): The coefficient is not zero (𝛽≠0)
+
+Conclusion at α=0.05 Significance Level
+For west_atlanticYes
+𝑡t-statistic: -3.304640
+𝑝p-value: 0.001176686
+Since p<0.05, we reject the null hypothesis. This means that west_atlanticYes is a statistically significant predictor of pf_score.
+
+For pf_expression_control
+𝑡t-statistic: 3.753059
+𝑝p-value: 0.0002449722
+Since p<0.05, we reject the null hypothesis. This means that pf_expression_control is a statistically significant predictor of pf_score.
+
+Conclusion
+Based on an α=0.05 significance level, we conclude that both west_atlanticYes and pf_expression_control are statistically significant predictors of pf_score. This means that the coefficients for these predictors are significantly different from zero, indicating that they have a meaningful impact on the response variable pf_score.
 
 You would not need to do (21) if the interaction was significant.
+
 You also should not remove a main variable (non-interaction variable) if the interaction variable remains in your model.
 
 ## Residual assessment - how well does the model fit the data?
@@ -510,3 +587,21 @@ You also should not remove a main variable (non-interaction variable) if the int
 You have already done this step in past activities by exploring your residuals (Activity 2).
 Using your final model from Task 3, assess how well your model fits the data.
 
+Interpretation of the Results
+R^2 (R-squared) 0.7141342,  indicates that approximately 71.41% of the variance in the response variable (pf_score) is explained by the predictor (pf_expression_control). This suggests a strong relationship between the predictor and the response variable.
+
+Residual Standard Error (sigma) 0.7992708, this is the standard deviation of the residuals (prediction errors). A smaller sigma indicates that the model's predictions are close to the actual values.
+
+F-statistic F*: 399.7033
+p-value: 2.313214×10−452.313214 \times 10^{-45}2.313214×10−45
+The F-statistic tests whether the model explains a significant portion of the variance in the response variable. The very high F-statistic and extremely low p-value suggest that the model is highly significant.
+
+Conclusion at α=0.05\alpha = 0.05α=0.05 Significance Level
+1.	Significance of Predictors:
+o	Both the intercept and pf_expression_control are highly significant, given the very low p-values associated with their coefficients.
+2.	Model Fit:
+o	R^2The high R^2 values indicate that the model explains a substantial portion of the variance in the response variable.
+o	Residual Standard Error (sigma): The relatively small value of sigma suggests that the model's predictions are fairly accurate.
+o	F-statistic: The very high F-statistic with a p-value much smaller than 0.05 indicates that the overall model is statistically significant.
+
+Based on these metrics, the model fits the data well, and both the predictor pf_expression_control and the interaction term (if considered) significantly contribute to explaining the variance in the response variable pf_score.
