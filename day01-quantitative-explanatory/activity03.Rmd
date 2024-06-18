@@ -111,14 +111,22 @@ Now, we will obtain graphical and numerical summaries to describe the pairwise r
 ```{r pairs-plot}
 
 hfi_2016 %>% 
+<<<<<<< HEAD
   select(pf_score, pf_expression_control, pf_rank) %>% 
+=======
+  select(pf_score, pf_expression_control, ef_legal) %>% 
+>>>>>>> e569d64085095f7795fb7bd22f8df5db92c796a8
   ggpairs()
 ```
 
   
 ```{r, warning=FALSE}
 hfi_2016 %>% 
+<<<<<<< HEAD
   select(pf_score, pf_expression_control, pf_rank) %>% 
+=======
+  select(pf_score, pf_expression_control, ef_legal) %>% 
+>>>>>>> e569d64085095f7795fb7bd22f8df5db92c796a8
   ggpairs()
 ```
 
@@ -131,6 +139,7 @@ Somewhat related... If you do not want all the messages `{tidyverse}` and `{tidy
 After running the `pairs-plot` code, answer the following questions:
 
 1. For each pair of variables, how would you describe the relationship graphically?
+<<<<<<< HEAD
 
 There's a positive relationship between pf score and pf control. Additionally, there is a negative relationship between pf rank and pf score. As one's score increases, their rank decreases. Furthermore, the expression control has a negative relation with rank. As expression control increases, the rank decreases.
 
@@ -146,6 +155,14 @@ There's a positive relationship between pf score and pf control. Additionally, t
 
 Yes, they are negatively correlated. 
 
+=======
+  Do any of the relationships look linear? Yes and there are no outliers.
+  Are there any interesting/odd features (outliers, non-linear patterns, etc.)?
+
+2. For each pair of variables, how would you describe the relationship numerically?
+
+3. Are your two explanatory variables collinear (correlated)? Yes with a correlation of 0.6
+>>>>>>> e569d64085095f7795fb7bd22f8df5db92c796a8
   Essentially, this means that adding more than one of these variables to the model would not add much value to the model.
   We will talk more on this issue in Activity 4 (other considerations in regression models).
 
@@ -244,6 +261,36 @@ fig
 
 
 
+```{r}
+library(plotly)
+
+two_d <- ggplot(hfi_2016, aes(x = pf_expression_control, y = pf_score, color = pf_rank)) +
+  geom_point(size = 2) +
+  labs(title = "3D Scatter Plot",
+       x = "Weight",
+       y = "Miles per Gallon",
+       color = "Horsepower")
+# Convert ggplot to plotly object for 3D plotting
+ggplotly(two_d) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = 'Weight'),
+      yaxis = list(title = 'Miles per Gallon'),
+      zaxis = list(title = 'Horsepower')
+    )
+  )
+
+# Create a 3D scatter plot
+fig <- plot_ly(hfi_2016, x = ~pf_expression_control, y = ~pf_score, z = ~pf_rank, type = 'scatter3d', mode = 'markers')
+
+fig
+```
+
+
+
+
+
+
 After doing this, respond to the following prompt:
 
 6. Compare your 3-D scatterplot and the `GGally::ggpairs` output. The 3D gives a clearer visualization.
@@ -280,7 +327,11 @@ Fortunately, we can create our own.
 
 - In the code chunk below titled `binary-pred`, replace "verbatim" with "r" just before the code chunk title.
 - Run your code chunk or knit your document.
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> e569d64085095f7795fb7bd22f8df5db92c796a8
 ```{r}
 hfi_2016 <- hfi_2016 %>%
   mutate(west_atlantic = if_else(
